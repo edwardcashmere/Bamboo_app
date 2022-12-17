@@ -14,4 +14,14 @@ defmodule BambooApp.Factory do
       name: sequence(:name, ["technology", "finance", "utility", "manufacturing", "energy"])
     }
   end
+
+  def company_factory do
+    %BambooApp.Stocks.Company{
+      name: sequence("company"),
+      description: sequence("The best in the world"),
+      price: 10.0,
+      ticker: sequence(:name, ["AMZN", "MSFT", "ABNB", "ALX", "AA"]),
+      category: build(:category)
+    }
+  end
 end

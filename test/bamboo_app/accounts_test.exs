@@ -28,6 +28,20 @@ defmodule BambooApp.AccountsTest do
       assert {:ok, %User{email: ^email, username: ^username}} = Accounts.create_user(valid_attrs)
     end
 
+    test "create_user/1 should not create two users with the same username or email" do
+      insert(:user, username: "john", email: "john@doe.com")
+      user_params = params_for(:user, username: "john")
+
+      assert {:error,
+              %Ecto.Changeset{errors: [username: {"has already been taken", _}]}} =
+               Accounts.create_user(user_params)
+
+      user_params = params_for(:user, email: "john@doe.com")
+
+      assert {:error, %Ecto.Changeset{errors: [email: {"has already been taken", _}]}} =
+               Accounts.create_user(user_params)
+    end
+
     test "create_user/1 with invalid data returns error changeset" do
       assert {:error, %Ecto.Changeset{}} = Accounts.create_user(@invalid_attrs)
     end

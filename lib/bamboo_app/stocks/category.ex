@@ -17,6 +17,7 @@ defmodule BambooApp.Stocks.Category do
     |> cast(attrs, [:name])
     |> validate_required([:name])
     |> downcase_username()
+    |> unique_constraint(:name)
   end
 
   @spec downcase_username(changeset :: Ecto.Changeset.t()) :: Ecto.Changeset.t()

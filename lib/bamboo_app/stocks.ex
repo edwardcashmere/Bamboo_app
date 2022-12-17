@@ -120,7 +120,8 @@ defmodule BambooApp.Stocks do
       [%Company{}, ...]
 
   """
-  def list_conpanies do
+  @spec list_companies :: [Company.t()]
+  def list_companies do
     Repo.all(Company)
   end
 
@@ -138,6 +139,7 @@ defmodule BambooApp.Stocks do
       ** (Ecto.NoResultsError)
 
   """
+  @spec get_company!(id :: number()) :: Company.t() | term()
   def get_company!(id), do: Repo.get!(Company, id)
 
   @doc """
@@ -152,6 +154,7 @@ defmodule BambooApp.Stocks do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec create_company(attrs :: map()) :: {:ok, Company.t()} | {:error, Ecto.Changeset.t()}
   def create_company(attrs \\ %{}) do
     %Company{}
     |> Company.changeset(attrs)
@@ -170,6 +173,7 @@ defmodule BambooApp.Stocks do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec update_company(company :: Company.t(), map()) :: {:ok, Company.t()} | {:error, Ecto.Changeset.t()}
   def update_company(%Company{} = company, attrs) do
     company
     |> Company.changeset(attrs)
@@ -188,6 +192,7 @@ defmodule BambooApp.Stocks do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec delete_company(company :: Company.t()) :: {:ok, Company.t()} | {:error, Ecto.Changeset.t()}
   def delete_company(%Company{} = company) do
     Repo.delete(company)
   end
@@ -201,6 +206,7 @@ defmodule BambooApp.Stocks do
       %Ecto.Changeset{data: %Company{}}
 
   """
+  @spec change_company(company :: Company.t(), map()) :: Ecto.Changeset.t()
   def change_company(%Company{} = company, attrs \\ %{}) do
     Company.changeset(company, attrs)
   end

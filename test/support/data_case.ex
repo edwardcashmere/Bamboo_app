@@ -24,6 +24,7 @@ defmodule BambooApp.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import BambooApp.DataCase
+      import BambooApp.Factory
     end
   end
 

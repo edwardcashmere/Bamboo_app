@@ -53,7 +53,7 @@ defmodule BambooApp.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:credo, "~> 1.6.7", only: [:test, :dev], runtime: false},
       {:dialyxir, "~> 1.2.0", only: [:test, :dev], runtime: false},
-      {:ex_check, "~> 0.14.0", only: [:dev, :test], runtime: false},
+      {:ex_check, "~> 0.14"},
       {:mix_audit, "~> 2.0", only: [:dev, :test], runtime: false},
       {:ex_machina, "~> 2.7.0", only: :test}
     ]

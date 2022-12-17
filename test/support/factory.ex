@@ -8,4 +8,10 @@ defmodule BambooApp.Factory do
       email: sequence(:email, &"user-#{&1}@test.com")
     }
   end
+
+  def category_factory do
+    %BambooApp.Stocks.Category{
+      name: sequence(:name, ["technology", "finance", "utility", "manufacturing", "energy"])
+    }
+  end
 end

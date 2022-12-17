@@ -1,4 +1,5 @@
 defmodule BambooAppWeb.PageController do
+  @moduledoc false
   use BambooAppWeb, :controller
 
   def home(conn, _params) do

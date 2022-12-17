@@ -1,4 +1,5 @@
 defmodule BambooAppWeb.ErrorHTML do
+  @moduledoc false
   use BambooAppWeb, :html
 
   # If you want to customize your error pages,

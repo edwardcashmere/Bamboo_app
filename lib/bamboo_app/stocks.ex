@@ -140,7 +140,11 @@ defmodule BambooApp.Stocks do
 
   """
   @spec get_company!(id :: number()) :: Company.t() | term()
-  def get_company!(id), do: Repo.get!(Company, id)
+  def get_company!(id) do
+    Company
+    |> Repo.get!(id)
+    |> Repo.preload(:category)
+  end
 
   @doc """
   Creates a company.
@@ -173,7 +177,8 @@ defmodule BambooApp.Stocks do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec update_company(company :: Company.t(), map()) :: {:ok, Company.t()} | {:error, Ecto.Changeset.t()}
+  @spec update_company(company :: Company.t(), map()) ::
+          {:ok, Company.t()} | {:error, Ecto.Changeset.t()}
   def update_company(%Company{} = company, attrs) do
     company
     |> Company.changeset(attrs)
@@ -192,7 +197,8 @@ defmodule BambooApp.Stocks do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec delete_company(company :: Company.t()) :: {:ok, Company.t()} | {:error, Ecto.Changeset.t()}
+  @spec delete_company(company :: Company.t()) ::
+          {:ok, Company.t()} | {:error, Ecto.Changeset.t()}
   def delete_company(%Company{} = company) do
     Repo.delete(company)
   end

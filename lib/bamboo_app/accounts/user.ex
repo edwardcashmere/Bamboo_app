@@ -1,9 +1,6 @@
 defmodule BambooApp.Accounts.User do
   @moduledoc false
-  use Ecto.Schema
-  import Ecto.Changeset
-
-  @type t() :: %__MODULE__{}
+  use BambooApp.CommonSchema
 
   schema "users" do
     field :email, :string
@@ -18,23 +15,8 @@ defmodule BambooApp.Accounts.User do
     |> cast(attrs, [:email, :username])
     |> validate_required([:email, :username])
     |> validate_format(:email, ~r/@/)
-    |> downcase_username()
+    |> format_string_fields(:username, &String.downcase/1)
     |> unique_constraint(:email)
     |> unique_constraint(:username)
-  end
-
-  @spec downcase_username(changeset :: Ecto.Changeset.t()) :: Ecto.Changeset.t()
-  defp downcase_username(%Ecto.Changeset{valid?: true} = changeset) do
-    username = get_change(changeset, :username)
-
-    if username do
-      put_change(changeset, :username, String.downcase(username))
-    else
-      changeset
-    end
-  end
-
-  defp downcase_username(changeset) do
-    changeset
   end
 end

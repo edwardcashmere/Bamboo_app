@@ -32,8 +32,7 @@ defmodule BambooApp.AccountsTest do
       insert(:user, username: "john", email: "john@doe.com")
       user_params = params_for(:user, username: "john")
 
-      assert {:error,
-              %Ecto.Changeset{errors: [username: {"has already been taken", _}]}} =
+      assert {:error, %Ecto.Changeset{errors: [username: {"has already been taken", _}]}} =
                Accounts.create_user(user_params)
 
       user_params = params_for(:user, email: "john@doe.com")

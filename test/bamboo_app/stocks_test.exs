@@ -33,9 +33,11 @@ defmodule BambooApp.StocksTest do
     end
 
     test "create_category/1 fails with duplicate category" do
-      insert(:category, name: "finance")
-      params = params_for(:category, name: "finance")
-      assert {:error, %Ecto.Changeset{errors: [name: {"has already been taken", _}]}} = Stocks.create_category(params)
+      insert(:category, name: "transport")
+      params = params_for(:category, name: "transport")
+
+      assert {:error, %Ecto.Changeset{errors: [name: {"has already been taken", _}]}} =
+               Stocks.create_category(params)
     end
 
     test "update_category/2 with valid data updates the category", %{category: category} do
@@ -60,7 +62,7 @@ defmodule BambooApp.StocksTest do
     end
   end
 
-  describe "conpanies" do
+  describe "companies" do
     alias BambooApp.Stocks.Company
 
     setup do
@@ -69,24 +71,25 @@ defmodule BambooApp.StocksTest do
 
     @invalid_attrs %{description: nil, name: nil, price: nil, ticker: nil}
 
-    test "list_conpanies/0 returns all conpanies", %{company: company} do
+    test "list_companies/0 returns all companies", %{company: company} do
       %Company{id: id, name: name} = company
-      assert  [%Company{id: ^id, name: ^name}] = Stocks.list_companies()
+      assert [%Company{id: ^id, name: ^name}] = Stocks.list_companies()
     end
 
-    test "get_company!/1 returns the company with given id",%{company: company} do
+    test "get_company!/1 returns the company with given id", %{company: company} do
       %Company{id: id, name: name} = company
 
-      assert  %Company{id: ^id, name: ^name}  = Stocks.get_company!(company.id)
+      assert %Company{id: ^id, name: ^name} = Stocks.get_company!(company.id)
     end
 
     test "create_company/1 with valid data creates a company" do
-      valid_attrs = %{
-        description: description,
-        name: name,
-        price: price,
-        ticker: ticker,
-      } = params_with_assocs(:company)
+      valid_attrs =
+        %{
+          description: description,
+          name: name,
+          price: price,
+          ticker: ticker
+        } = params_with_assocs(:company)
 
       assert {:ok, %Company{} = company} = Stocks.create_company(valid_attrs)
       assert company.description == description
@@ -99,8 +102,15 @@ defmodule BambooApp.StocksTest do
       assert {:error, %Ecto.Changeset{}} = Stocks.create_company(@invalid_attrs)
     end
 
-    test "update_company/2 with valid data updates the company", %{company: company} do
+    test "create_company/1 with duplicate name and ticker fails with error", %{company: company} do
+      %{name: name, ticker: ticker} = company
+      params = params_with_assocs(:company, name: name, ticker: ticker)
 
+      assert {:error, %Ecto.Changeset{errors: [ticker: {"has already been taken", _}]}} =
+               Stocks.create_company(params)
+    end
+
+    test "update_company/2 with valid data updates the company", %{company: company} do
       update_attrs = %{
         description: "some updated description",
         name: "some updated name",

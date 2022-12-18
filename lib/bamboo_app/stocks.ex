@@ -162,7 +162,7 @@ defmodule BambooApp.Stocks do
   def create_company(attrs \\ %{}) do
     %Company{}
     |> Company.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(on_conflict: :nothing)
   end
 
   @doc """

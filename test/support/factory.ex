@@ -24,4 +24,11 @@ defmodule BambooApp.Factory do
       category: build(:category)
     }
   end
+
+  def user_category_subscription_factory do
+    %BambooApp.Subscription.UserCategorySubscription{
+      category: build(:category),
+      user: build(:user)
+    }
+  end
 end

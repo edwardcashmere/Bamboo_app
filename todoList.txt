@@ -1,6 +1,6 @@
 [x]create user schema under account context
-[]create category schema and company  under stocks context
-[]create subriptions under subscriptions context
+[x]create category schema and company  under stocks context
+[x]create subriptions under subscriptions context
 []worker for sending emails when a new company is created
 []setup channels for connecting to mobile apps and publishing events through it
 []create rest api that accepts search paramenters

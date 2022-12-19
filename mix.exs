@@ -55,7 +55,11 @@ defmodule BambooApp.MixProject do
       {:dialyxir, "~> 1.2.0", only: [:test, :dev], runtime: false},
       {:ex_check, "~> 0.14"},
       {:mix_audit, "~> 2.0", only: [:dev, :test], runtime: false},
-      {:ex_machina, "~> 2.7.0", only: :test}
+      {:ex_machina, "~> 2.7.0", only: :test},
+      {:oban, "~> 2.13"},
+      {:broadway, "~> 1.0.4", override: true},
+      {:broadway_rabbitmq, "~> 0.7.0", override: true}
+
     ]
   end
 

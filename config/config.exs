@@ -56,6 +56,12 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
+# config/config.exs
+config :bamboo_app, Oban,
+  repo: BambooApp.Repo,
+  plugins: [Oban.Plugins.Pruner],
+  queues: [default: 10]
+
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 

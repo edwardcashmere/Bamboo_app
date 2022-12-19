@@ -25,6 +25,7 @@ defmodule BambooApp.DataCase do
       import Ecto.Query
       import BambooApp.DataCase
       import BambooApp.Factory
+      use Oban.Testing, repo: BambooApp.Repo
     end
   end
 

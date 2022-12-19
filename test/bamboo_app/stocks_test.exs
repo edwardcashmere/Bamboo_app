@@ -1,8 +1,9 @@
 defmodule BambooApp.StocksTest do
   @moduledoc false
-  use BambooApp.DataCase
+  use BambooApp.DataCase, async: true
 
   alias BambooApp.Stocks
+  alias BambooApp.Workers.SubscribersWorker
 
   describe "categories" do
     alias BambooApp.Stocks.Category
@@ -82,7 +83,7 @@ defmodule BambooApp.StocksTest do
       assert %Company{id: ^id, name: ^name} = Stocks.get_company!(company.id)
     end
 
-    test "create_company/1 with valid data creates a company" do
+    test "create_company/1 with valid data creates a company and a jab is enqueued" do
       valid_attrs =
         %{
           description: description,
@@ -91,11 +92,19 @@ defmodule BambooApp.StocksTest do
           ticker: ticker
         } = params_with_assocs(:company)
 
-      assert {:ok, %Company{} = company} = Stocks.create_company(valid_attrs)
+      assert {:ok, %Company{id: company_id, category_id: category_id} = company} =
+               Stocks.create_company(valid_attrs)
+
       assert company.description == description
       assert company.name == name
       assert company.price == price
       assert company.ticker == ticker
+
+      # job is enqued
+      assert_enqueued(
+        worker: SubscribersWorker,
+        args: %{"company_id" => company_id, "category_id" => category_id}
+      )
     end
 
     test "create_company/1 with invalid data returns error changeset" do

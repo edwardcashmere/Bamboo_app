@@ -7,6 +7,7 @@ defmodule BambooApp.Stocks do
   alias BambooApp.Repo
 
   alias BambooApp.Stocks.Category
+  alias BambooApp.Workers.SubscribersWorker
 
   @doc """
   Returns the list of categories.
@@ -162,7 +163,19 @@ defmodule BambooApp.Stocks do
   def create_company(attrs \\ %{}) do
     %Company{}
     |> Company.changeset(attrs)
-    |> Repo.insert(on_conflict: :nothing)
+    |> Repo.insert()
+    |> case do
+      {:ok, company} ->
+        %{company_id: company.id, category_id: company.category_id}
+        |> SubscribersWorker.new()
+        |> Oban.insert()
+
+        {:ok, company}
+
+      # broadcast to subscribed channels
+      {:error, changeset} ->
+        {:error, changeset}
+    end
   end
 
   @doc """

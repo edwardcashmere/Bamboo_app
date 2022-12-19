@@ -5,7 +5,8 @@ defmodule BambooApp.Factory do
   def user_factory do
     %BambooApp.Accounts.User{
       username: sequence("username"),
-      email: sequence(:email, &"user-#{&1}@test.com")
+      email: sequence(:email, &"user-#{&1}@test.com"),
+      last_seen: NaiveDateTime.utc_now()
     }
   end
 

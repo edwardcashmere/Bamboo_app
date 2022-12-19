@@ -22,6 +22,7 @@ defmodule BambooAppWeb.ChannelCase do
       # Import conveniences for testing with channels
       import Phoenix.ChannelTest
       import BambooAppWeb.ChannelCase
+      import BambooApp.Factory
 
       # The default endpoint for testing
       @endpoint BambooAppWeb.Endpoint

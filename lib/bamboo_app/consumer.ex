@@ -1,7 +1,6 @@
 defmodule BambooApp.Consumer do
-@moduledoc false
+  @moduledoc false
   use Broadway
-
 
   require Logger
   alias BambooApp.Stocks
@@ -11,23 +10,24 @@ defmodule BambooApp.Consumer do
     Broadway.start_link(__MODULE__,
       name: __MODULE__,
       producer: [
-        module: {BroadwayRabbitMQ.Producer,
-          queue: "new_companies",
-              connection: [
-              username: "user",
-              password: "password",
-            ],
-          qos: [
-            prefetch_count: 50,
-          ]
-        },
+        module:
+          {BroadwayRabbitMQ.Producer,
+           queue: "new_companies",
+           connection: [
+             username: "user",
+             password: "password"
+           ],
+           qos: [
+             prefetch_count: 50
+           ]},
         concurrency: 1
       ],
       processors: [
         default: [
           concurrency: 50
         ]
-      ])
+      ]
+    )
   end
 
   @impl true
@@ -40,5 +40,4 @@ defmodule BambooApp.Consumer do
     Logger.info("I was received #{data}")
     Stocks.create_company(data)
   end
-
 end

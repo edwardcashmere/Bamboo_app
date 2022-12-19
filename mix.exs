@@ -58,8 +58,8 @@ defmodule BambooApp.MixProject do
       {:ex_machina, "~> 2.7.0", only: :test},
       {:oban, "~> 2.13"},
       {:broadway, "~> 1.0.4", override: true},
-      {:broadway_rabbitmq, "~> 0.7.0", override: true}
-
+      {:broadway_rabbitmq, "~> 0.7.0", override: true},
+      {:phoenix_view, "~> 2.0"}
     ]
   end
 

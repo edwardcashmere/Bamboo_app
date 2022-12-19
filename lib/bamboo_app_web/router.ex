@@ -15,9 +15,8 @@ defmodule BambooAppWeb.Router do
   end
 
   scope "/", BambooAppWeb do
-    pipe_through :browser
-
-    get "/", PageController, :home
+    pipe_through :api
+    get "/companies", CompanyController, :list
   end
 
   # Other scopes may use custom stacks.

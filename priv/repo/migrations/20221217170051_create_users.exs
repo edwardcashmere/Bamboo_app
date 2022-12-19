@@ -6,6 +6,7 @@ defmodule BambooApp.Repo.Migrations.CreateUsers do
     create table(:users) do
       add :email, :string
       add :username, :string
+      add :last_seen, :naive_datetime
 
       timestamps()
     end

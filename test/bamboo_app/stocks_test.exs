@@ -1,6 +1,6 @@
 defmodule BambooApp.StocksTest do
   @moduledoc false
-  use BambooApp.DataCase, async: true
+  use BambooApp.DataCase
 
   alias BambooApp.Stocks
   alias BambooApp.Workers.SubscribersWorker
@@ -72,7 +72,35 @@ defmodule BambooApp.StocksTest do
 
     @invalid_attrs %{description: nil, name: nil, price: nil, ticker: nil}
 
-    test "list_companies/0 returns all companies", %{company: company} do
+    test "list_companies/1 returns all companies", %{company: company} do
+      %Company{id: id, name: name} = company
+
+      assert [%Company{id: ^id, name: ^name}] = Stocks.list_companies()
+    end
+
+    test "list_companies/1 returns existing companies or new depending on params", %{
+      company: %{id: company_1_id}
+    } do
+      user = insert(:user)
+
+      [%{id: company_2_id}, %{id: company_3_id}] =
+        Enum.map(1..2, fn _ ->
+          Process.sleep(1000)
+          insert(:company)
+        end)
+
+      existing_company_params = %{criteria: :existing, last_seen: user.last_seen}
+      new_company_params = %{criteria: :new, last_seen: user.last_seen}
+
+      # query for new companies
+      assert [%Company{id: ^company_2_id}, %Company{id: ^company_3_id}] =
+               Stocks.list_companies(new_company_params)
+
+      # query for existing companies
+      assert [%Company{id: ^company_1_id}] = Stocks.list_companies(existing_company_params)
+    end
+
+    test "list_companies/1 returns new companies", %{company: company} do
       %Company{id: id, name: name} = company
       assert [%Company{id: ^id, name: ^name}] = Stocks.list_companies()
     end

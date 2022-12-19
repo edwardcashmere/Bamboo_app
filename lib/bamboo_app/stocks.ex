@@ -8,6 +8,7 @@ defmodule BambooApp.Stocks do
 
   alias BambooApp.Stocks.Category
   alias BambooApp.Workers.SubscribersWorker
+  alias Phoenix.PubSub
 
   @doc """
   Returns the list of categories.
@@ -113,17 +114,43 @@ defmodule BambooApp.Stocks do
   alias BambooApp.Stocks.Company
 
   @doc """
-  Returns the list of conpanies.
-
+  Returns the list of companies.
   ## Examples
 
-      iex> list_conpanies()
+      iex> list_conpanies(params)
       [%Company{}, ...]
 
   """
-  @spec list_companies :: [Company.t()]
-  def list_companies do
-    Repo.all(Company)
+  @spec list_companies(params :: map()) :: [Company.t()]
+  def list_companies(params \\ %{}) do
+    default_params = %{limit: 500, criteria: :all, last_seen: NaiveDateTime.utc_now()}
+
+    {%{limit: limit, last_seen: last_seen}, criteria} =
+      Map.split(Map.merge(default_params, params), [:limit, :last_seen])
+
+    query =
+      Company
+      |> from(as: :company)
+      |> limit(^limit)
+
+    criteria
+    |> Enum.reduce(query, fn
+      {:criteria, :all}, query ->
+        query
+
+      {:criteria, :existing}, query ->
+        IO.puts("existing get called")
+        where(query, [company: c], c.inserted_at <= ^last_seen)
+
+      {:criteria, :new}, query ->
+        IO.puts("new gets called")
+        where(query, [company: c], c.inserted_at > ^last_seen)
+
+      _, query ->
+        query
+    end)
+    |> preload(:category)
+    |> Repo.all()
   end
 
   @doc """
@@ -166,9 +193,16 @@ defmodule BambooApp.Stocks do
     |> Repo.insert()
     |> case do
       {:ok, company} ->
+        company = company |> Repo.preload(:category)
+
         %{company_id: company.id, category_id: company.category_id}
         |> SubscribersWorker.new()
         |> Oban.insert()
+
+        # broadcast message to all subriber to this category of companies
+        PubSub.broadcast!(BambooApp.PubSub, "new_companies:" <> company.category.name, %{
+          company: company
+        })
 
         {:ok, company}
 

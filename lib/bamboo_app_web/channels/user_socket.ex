@@ -8,7 +8,7 @@ defmodule BambooAppWeb.UserSocket do
 
   ## Channels
 
-  channel "user:*", BambooAppWeb.UserChannel
+  channel "new_companies:*", BambooAppWeb.NewCompanyChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After

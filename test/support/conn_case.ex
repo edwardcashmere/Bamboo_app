@@ -28,6 +28,7 @@ defmodule BambooAppWeb.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import BambooAppWeb.ConnCase
+      import BambooApp.Factory
     end
   end
 

@@ -1,4 +1,4 @@
-defmodule BambooAppWeb.CompanyController do
+defmodule BambooAppWeb.Api.CompanyController do
   @moduledoc false
   use BambooAppWeb, :controller
 

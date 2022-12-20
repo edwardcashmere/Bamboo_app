@@ -1,6 +1,6 @@
 defmodule BambooApp.AccountsTest do
   @moduledoc false
-  use BambooApp.DataCase
+  use BambooApp.DataCase, async: true
 
   alias BambooApp.Accounts
 

@@ -34,3 +34,7 @@ config :logger, level: :warning
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
+
+config :bamboo_app,
+  producer_module: Broadway.DummyProducer,
+  producer_options: [] # change if required for your dev/prod producer

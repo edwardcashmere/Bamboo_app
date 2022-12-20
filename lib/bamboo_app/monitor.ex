@@ -21,41 +21,96 @@ defmodule BambooApp.Monitor do
 
   @impl true
   def handle_info(:ping, socket) do
-    consumer_pid = :erlang.whereis(Consumer)
+    Process.send_after(self(), :ping, 1000)
 
-    if Process.alive?(consumer_pid) and Stocks.company_added_last_24hours?() do
-      Process.send_after(self(), :ping, 60_000)
-    else
-      fetch_companies()
-      |> Enum.chunk_every(2)
-      |> Enum.each(fn companies ->
-        Enum.map(companies, fn company -> Task.async(fn -> Stocks.create_company(company) end) end)
-        |> Task.await_many()
-      end)
-    end
+    # if Process.alive?(consumer_pid) and Stocks.company_added_last_24hours?() do
+    #   Process.send_after(self(), :ping, 60_000)
+    # else
+    #   call_api()
+    #   |> Enum.chunk_every(2)
+    #   |> Enum.each(fn companies ->
+    #     Enum.map(companies, fn company -> Task.async(fn -> Stocks.create_company(company) end) end)
+    #     |> Task.await_many()
+    #   end)
+
+    # end
 
     {:noreply, socket}
   end
 
-  defp fetch_companies() do
+  def call_api(_, 0) do
+    []
+  end
+
+  def call_api(page_number, total) do
+    %{page_size: page_size, page_number: page_number, data: data} = fetch_companies(page_number)
+    call_api(page_number + 1, total - page_size)
+    data
+  end
+
+  def call_api(page_number \\ 1) do
+    %{total: total, page_size: page_size, page_number: page_number, data: data} =
+      fetch_companies(page_number)
+
+    call_api(page_number + 1, total - page_size)
+    data
+  end
+
+  defp fetch_companies(page_number) do
+    Enum.find(data(), fn %{page: page} -> page == page_number end)
+  end
+
+  def data() do
     [
       %{
-        name: "Amazon",
-        ticker: "AMZN",
-        descriptions: "a platform for connecting sellers to buyers",
-        price: 1002.2
+        total: 6,
+        page_size: 3,
+        page_number: 1,
+        data: [
+          %{
+            name: "Amazon",
+            ticker: "AMZN",
+            descriptions: "a platform for connecting sellers to buyers",
+            price: 1002.2
+          },
+          %{
+            name: "Google",
+            ticker: "GOOG",
+            descriptions: "a subsidiary of alpahabet",
+            price: 500.35
+          },
+          %{
+            name: "Nvidia",
+            ticker: "NVDA",
+            descriptions: "a platform for connecting sellers to buyers",
+            price: 200.0
+          }
+        ]
       },
       %{
-        name: "Google",
-        ticker: "GOOG",
-        descriptions: "a subsidiary of alpahabet",
-        price: 500.35
-      },
-      %{
-        name: "Nvidia",
-        ticker: "NVDA",
-        descriptions: "a platform for connecting sellers to buyers",
-        price: 200.0
+        total: 6,
+        page_size: 3,
+        page_number: 2,
+        data: [
+          %{
+            name: "Jumia",
+            ticker: "JMI",
+            descriptions: "a platform for connecting sellers to buyers in africa",
+            price: 500.55
+          },
+          %{
+            name: "Safaricom",
+            ticker: "SAF",
+            descriptions: "Telecom company",
+            price: 90.34
+          },
+          %{
+            name: "Binance",
+            ticker: "BNN",
+            descriptions: "a crypto currency exchange platform",
+            price: 300.0
+          }
+        ]
       }
     ]
   end

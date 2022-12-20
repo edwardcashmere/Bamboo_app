@@ -19,8 +19,8 @@ defmodule BambooAppWeb.NewCompanyChannelTest do
 
     {:ok, %BambooApp.Stocks.Company{id: _id}} = Stocks.create_company(new_company_params)
 
-    assert_broadcast "new_company", msg
-
-    IO.inspect(Jason.decode!(msg))
+    assert_broadcast "new_company",
+                     "{\"company\":{\"name\":\"company0\",\"description\":\"The best in the world0\",\"price\":10.0,\"ticker\":\"MSFT\"," <>
+                       _other
   end
 end

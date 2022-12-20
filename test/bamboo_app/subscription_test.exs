@@ -1,6 +1,6 @@
 defmodule BambooApp.SubscriptionTest do
   @moduledoc false
-  use BambooApp.DataCase
+  use BambooApp.DataCase, async: true
 
   alias BambooApp.Subscription
 

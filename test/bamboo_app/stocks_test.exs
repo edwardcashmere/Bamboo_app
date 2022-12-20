@@ -1,6 +1,6 @@
 defmodule BambooApp.StocksTest do
   @moduledoc false
-  use BambooApp.DataCase
+  use BambooApp.DataCase, async: true
 
   alias BambooApp.Stocks
   alias BambooApp.Workers.SubscribersWorker
@@ -21,6 +21,12 @@ defmodule BambooApp.StocksTest do
 
     test "get_category/1 returns the category with given id", %{category: category} do
       assert Stocks.get_category(category.id) == category
+    end
+
+    test "get_category_by_name/1 returns the category with given name" do
+      insert(:category, name: "energy")
+
+      assert %Category{name: "energy"} = Stocks.get_category_by_name("energy")
     end
 
     test "create_category/1 with valid data creates a category" do

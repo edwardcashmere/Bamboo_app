@@ -1,6 +1,6 @@
-defmodule BambooAppWeb.CompanyControllerTest do
+defmodule BambooAppWeb.Api.CompanyControllerTest do
   @moduledoc false
-  use BambooAppWeb.ConnCase
+  use BambooAppWeb.ConnCase, async: true
 
   setup do
     %{id: company_1_id} = insert(:company)
@@ -29,7 +29,7 @@ defmodule BambooAppWeb.CompanyControllerTest do
     user: user
   } do
     conn = get(conn, ~p"/companies", %{criteria: :existing, last_seen: user.last_seen})
-    assert %{"data" => [%{"id" => ^company_1_id}]} = comapanies = json_response(conn, 200)
+    assert %{"data" => [%{"id" => ^company_1_id}]} = json_response(conn, 200)
   end
 
   test "GET /companies get new companies", %{
@@ -41,7 +41,7 @@ defmodule BambooAppWeb.CompanyControllerTest do
     conn = get(conn, ~p"/companies", %{criteria: :new, last_seen: user.last_seen})
 
     assert %{"data" => [%{"id" => ^company_2_id}, %{"id" => ^company_3_id}]} =
-             comapnies = json_response(conn, 200)
+             json_response(conn, 200)
   end
 
   defp time_travel(time) do

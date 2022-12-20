@@ -37,6 +37,7 @@ defmodule BambooApp.Consumer do
     message
     |> Message.update_data(&maybe_create_category/1)
     |> Message.update_data(&process_data/1)
+
   end
 
   defp transform_data(message, category) do
@@ -46,12 +47,14 @@ defmodule BambooApp.Consumer do
   end
 
   defp maybe_create_category(message) do
-    case Stocks.get_category_by_name(message[:industry]) do
+    case Stocks.get_category_by_name(message[:industry]) |> IO.inspect(label: "FML") do
       nil ->
+          IO.puts("I get here 4")
         {:ok, new_category} = Stocks.create_category(%{name: message[:industry]})
         transform_data(message, new_category)
 
       category ->
+       IO.puts("I get here 5")
         transform_data(message, category)
     end
   end

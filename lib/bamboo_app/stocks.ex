@@ -42,7 +42,10 @@ defmodule BambooApp.Stocks do
   def get_category(id), do: Repo.get(Category, id)
 
   @spec get_category_by_name(name :: String.t()) :: Category.t() | nil
-  def get_category_by_name(name), do: Repo.get_by(Category, name: name)
+  def get_category_by_name(name) do
+    IO.inspect("I get here 3")
+      Repo.get_by(Category, name: name) |> IO.inspect()
+  end
 
   @doc """
   Creates a category.

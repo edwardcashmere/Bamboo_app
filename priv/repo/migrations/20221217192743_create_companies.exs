@@ -8,6 +8,8 @@ defmodule BambooApp.Repo.Migrations.CreateCompanies do
       add :description, :string
       add :ticker, :string
       add :price, :float
+      add :added_at, :naive_datetime
+
       add :category_id, references(:categories, on_delete: :nothing, null: false)
 
       timestamps()

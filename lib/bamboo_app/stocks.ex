@@ -8,7 +8,6 @@ defmodule BambooApp.Stocks do
 
   alias BambooApp.Stocks.Category
   alias BambooApp.Workers.SubscribersWorker
-  alias Phoenix.PubSub
 
   @doc """
   Returns the list of categories.
@@ -27,19 +26,23 @@ defmodule BambooApp.Stocks do
   @doc """
   Gets a single category.
 
-  Raises `Ecto.NoResultsError` if the Category does not exist.
+  Raises nil if the Category does not exist.
 
   ## Examples
 
-      iex> get_category!(123)
+      iex> get_category(123)
       %Category{}
 
-      iex> get_category!(456)
-      ** (Ecto.NoResultsError)
+      iex> get_category(456)
+      nil
 
   """
-  @spec get_category!(id :: number()) :: Category.t() | term()
-  def get_category!(id), do: Repo.get!(Category, id)
+
+  @spec get_category(id :: number()) :: Category.t() | nil
+  def get_category(id), do: Repo.get(Category, id)
+
+  @spec get_category_by_name(name :: String.t()) :: Category.t() | nil
+  def get_category_by_name(name), do: Repo.get_by(Category, name: name)
 
   @doc """
   Creates a category.
@@ -139,12 +142,10 @@ defmodule BambooApp.Stocks do
         query
 
       {:criteria, :existing}, query ->
-        IO.puts("existing get called")
-        where(query, [company: c], c.inserted_at <= ^last_seen)
+        where(query, [company: c], c.added_at <= ^last_seen)
 
       {:criteria, :new}, query ->
-        IO.puts("new gets called")
-        where(query, [company: c], c.inserted_at > ^last_seen)
+        where(query, [company: c], c.added_at > ^last_seen)
 
       _, query ->
         query
@@ -188,6 +189,8 @@ defmodule BambooApp.Stocks do
   """
   @spec create_company(attrs :: map()) :: {:ok, Company.t()} | {:error, Ecto.Changeset.t()}
   def create_company(attrs \\ %{}) do
+    attrs = Map.put(attrs, :added_at, NaiveDateTime.utc_now())
+
     %Company{}
     |> Company.changeset(attrs)
     |> Repo.insert()
@@ -199,10 +202,13 @@ defmodule BambooApp.Stocks do
         |> SubscribersWorker.new()
         |> Oban.insert()
 
+        message = Jason.encode!(%{company: company})
         # broadcast message to all subriber to this category of companies
-        PubSub.broadcast!(BambooApp.PubSub, "new_companies:" <> company.category.name, %{
-          company: company
-        })
+        BambooAppWeb.Endpoint.broadcast!(
+          "new_companies:" <> company.category.name,
+          "new_company",
+          message
+        )
 
         {:ok, company}
 
@@ -248,6 +254,16 @@ defmodule BambooApp.Stocks do
           {:ok, Company.t()} | {:error, Ecto.Changeset.t()}
   def delete_company(%Company{} = company) do
     Repo.delete(company)
+  end
+
+  @spec company_added_last_24hours?() :: boolean()
+  def company_added_last_24hours? do
+    last_24_hours = NaiveDateTime.add(NaiveDateTime.utc_now(), -86_400)
+
+    Company
+    |> from(as: :company)
+    |> where([company: c], c.added_at > ^last_24_hours)
+    |> Repo.exists?()
   end
 
   @doc """

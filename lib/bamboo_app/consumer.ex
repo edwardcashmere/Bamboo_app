@@ -7,6 +7,8 @@ defmodule BambooApp.Consumer do
   alias Broadway.Message
 
   def start_link(_opts) do
+    Logger.info("Rabbitmq started")
+
     Broadway.start_link(__MODULE__,
       name: __MODULE__,
       producer: [
@@ -33,11 +35,31 @@ defmodule BambooApp.Consumer do
   @impl true
   def handle_message(_, message, _) do
     message
+    |> Message.update_data(&maybe_create_category/1)
     |> Message.update_data(&process_data/1)
   end
 
-  defp process_data(data) do
-    Logger.info("I was received #{data}")
-    Stocks.create_company(data)
+  defp transform_data(message, category) do
+    message
+    |> Map.put(:category_id, category.id)
+    |> Map.delete(:industry)
+  end
+
+  defp maybe_create_category(message) do
+    case Stocks.get_category_by_name(message[:industry]) do
+      nil ->
+        {:ok, new_category} = Stocks.create_category(%{name: message[:industry]})
+        transform_data(message, new_category)
+
+      category ->
+        transform_data(message, category)
+    end
+  end
+
+  defp process_data(message) do
+    Logger.info("I was received #{message}")
+
+    message
+    |> Stocks.create_company()
   end
 end

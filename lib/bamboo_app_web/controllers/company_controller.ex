@@ -4,6 +4,7 @@ defmodule BambooAppWeb.CompanyController do
 
   alias BambooApp.Stocks
 
+  @spec list(conn :: Plug.Conn.t(), params :: map()) :: map()
   def list(conn, params) do
     params = format_params(params)
     companies = Stocks.list_companies(params)

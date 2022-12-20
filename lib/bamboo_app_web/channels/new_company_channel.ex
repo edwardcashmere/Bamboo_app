@@ -1,5 +1,6 @@
 defmodule BambooAppWeb.NewCompanyChannel do
   @moduledoc false
+  use Phoenix.Channel
 
   def join("new_companies:" <> _category, _payload, socket) do
     {:ok, socket}

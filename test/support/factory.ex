@@ -22,7 +22,8 @@ defmodule BambooApp.Factory do
       description: sequence("The best in the world"),
       price: 10.0,
       ticker: sequence(:name, ["AMZN", "MSFT", "ABNB", "ALX", "AA"]),
-      category: build(:category)
+      category: build(:category),
+      added_at: NaiveDateTime.utc_now()
     }
   end
 

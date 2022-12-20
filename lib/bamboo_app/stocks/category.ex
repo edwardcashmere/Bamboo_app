@@ -2,6 +2,7 @@ defmodule BambooApp.Stocks.Category do
   @moduledoc false
   use BambooApp.CommonSchema
 
+  @derive {Jason.Encoder, only: [:name]}
   schema "categories" do
     field :name, :string
 

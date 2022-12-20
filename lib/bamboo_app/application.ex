@@ -20,7 +20,8 @@ defmodule BambooApp.Application do
       {Finch, name: BambooApp.Finch},
       # Start the Endpoint (http/https)
       BambooAppWeb.Endpoint,
-      {BambooApp.Consumer, []}
+      {BambooApp.Consumer, []},
+      {BambooApp.Monitor, []}
 
       # Start a worker by calling: BambooApp.Worker.start_link(arg)
       # {BambooApp.Worker, arg}

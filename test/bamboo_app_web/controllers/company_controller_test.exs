@@ -6,11 +6,8 @@ defmodule BambooAppWeb.CompanyControllerTest do
     %{id: company_1_id} = insert(:company)
     user = insert(:user)
 
-    [%{id: company_2_id}, %{id: company_3_id}] =
-      Enum.map(1..2, fn _ ->
-        Process.sleep(1000)
-        insert(:company)
-      end)
+    %{id: company_2_id} = insert(:company, added_at: time_travel(10))
+    %{id: company_3_id} = insert(:company, added_at: time_travel(15))
 
     [
       company_1_id: company_1_id,
@@ -45,5 +42,10 @@ defmodule BambooAppWeb.CompanyControllerTest do
 
     assert %{"data" => [%{"id" => ^company_2_id}, %{"id" => ^company_3_id}]} =
              comapnies = json_response(conn, 200)
+  end
+
+  defp time_travel(time) do
+    NaiveDateTime.utc_now()
+    |> NaiveDateTime.add(time)
   end
 end

@@ -19,8 +19,8 @@ defmodule BambooApp.StocksTest do
       assert Stocks.list_categories() == [category]
     end
 
-    test "get_category!/1 returns the category with given id", %{category: category} do
-      assert Stocks.get_category!(category.id) == category
+    test "get_category/1 returns the category with given id", %{category: category} do
+      assert Stocks.get_category(category.id) == category
     end
 
     test "create_category/1 with valid data creates a category" do
@@ -50,12 +50,12 @@ defmodule BambooApp.StocksTest do
 
     test "update_category/2 with invalid data returns error changeset", %{category: category} do
       assert {:error, %Ecto.Changeset{}} = Stocks.update_category(category, @invalid_attrs)
-      assert category == Stocks.get_category!(category.id)
+      assert category == Stocks.get_category(category.id)
     end
 
     test "delete_category/1 deletes the category", %{category: category} do
       assert {:ok, %Category{}} = Stocks.delete_category(category)
-      assert_raise Ecto.NoResultsError, fn -> Stocks.get_category!(category.id) end
+      refute Stocks.get_category(category.id)
     end
 
     test "change_category/1 returns a category changeset", %{category: category} do
@@ -83,11 +83,8 @@ defmodule BambooApp.StocksTest do
     } do
       user = insert(:user)
 
-      [%{id: company_2_id}, %{id: company_3_id}] =
-        Enum.map(1..2, fn _ ->
-          Process.sleep(1000)
-          insert(:company)
-        end)
+      %{id: company_2_id} = insert(:company, added_at: time_travel(10))
+      %{id: company_3_id} = insert(:company, added_at: time_travel(15))
 
       existing_company_params = %{criteria: :existing, last_seen: user.last_seen}
       new_company_params = %{criteria: :new, last_seen: user.last_seen}
@@ -175,5 +172,25 @@ defmodule BambooApp.StocksTest do
     test "change_company/1 returns a company changeset", %{company: company} do
       assert %Ecto.Changeset{} = Stocks.change_company(company)
     end
+  end
+
+  describe "company_added_last_24hours?/0" do
+    test "company_added_last_24hours?/0 returns true if atleast one company was added in in the last 24hours" do
+      insert(:company, added_at: time_travel(-50_000))
+
+      assert Stocks.company_added_last_24hours?()
+    end
+
+    test "company_added_last_24hours?/0 returns false if no company was added in in the last 24hours" do
+      insert(:company, added_at: time_travel(-90_000))
+      insert(:company, added_at: time_travel(-100_000))
+
+      refute Stocks.company_added_last_24hours?()
+    end
+  end
+
+  defp time_travel(time) do
+    NaiveDateTime.utc_now()
+    |> NaiveDateTime.add(time)
   end
 end

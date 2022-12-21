@@ -8,17 +8,18 @@ defmodule BambooApp.UserEmail do
     |> from({"Bamboo inc", "system@bamboo.com"})
     |> subject("New Company notification")
     |> html_body("""
-    <h1>Hello #{user.username}</h1>
-    <br />
-    <p>#{company.name} has been added to our portfolio</p>
+    <section>
+      <h1> Hey #{user.username}</h1>
+      <p>#{company.name} has been added our platform</p>
 
-    <p> #{company.description} </p>
-
-
-    <strong>Symbol: </strong> #{company.ticker} <br />
-    <strong>Price: </strong> #{company.price} <br />
-
-
+      <p> #{company.description} </p>
+      <div>
+        <span>Symbol: </span> <p>#{company.ticker}</p>
+      </div>
+      <div>
+        <span>Price: </span> <p>#{company.price}</p>
+      </div>
+    </section>
 
     """)
     |> text_body("Hello #{user.username}\n")

@@ -14,14 +14,13 @@ defmodule BambooApp.Application do
       BambooApp.Repo,
       # Start the PubSub system
       {BambooApp.Consumer, []},
-
       {Oban, Application.fetch_env!(:bamboo_app, Oban)},
       {Phoenix.PubSub, name: BambooApp.PubSub},
       # Start Finch
       {Finch, name: BambooApp.Finch},
       # Start the Endpoint (http/https)
-      BambooAppWeb.Endpoint
-      # {BambooApp.Monitor, []}
+      BambooAppWeb.Endpoint,
+      {BambooApp.Monitor, []}
 
       # Start a worker by calling: BambooApp.Worker.start_link(arg)
       # {BambooApp.Worker, arg}

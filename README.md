@@ -1,5 +1,24 @@
 # BambooApp
 
+## Setup The App Correctly
+ * run `mix deps.get`
+ * run `mix compile`
+ * run `mix ecto.setup`
+ * run `mix docker-compose up -d` (setup database and rabbitmq container)
+ * go to localhost:15672 
+ * enter email: **user**
+ * enter password: **password**
+ * navigate to queues tab and create a queue with the name **new_companies**
+ * then run 
+ ```
+iex -S mix phx.server
+```
+
+## Run tests
+
+For testing run `mix check` it run the test suite alongside other tools 
+like dialyxir, credo, and format.
+
 To start your Phoenix server:
 
   * Install dependencies with `mix deps.get`

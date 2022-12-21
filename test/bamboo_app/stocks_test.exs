@@ -76,7 +76,7 @@ defmodule BambooApp.StocksTest do
       [company: insert(:company)]
     end
 
-    @invalid_attrs %{description: nil, name: nil, price: nil, ticker: nil}
+    @invalid_attrs %{description: nil, name: nil, price: nil, ticker: nil, industry: "energy"}
 
     test "list_companies/1 returns all companies", %{company: company} do
       %Company{id: id, name: name} = company
@@ -114,7 +114,7 @@ defmodule BambooApp.StocksTest do
       assert %Company{id: ^id, name: ^name} = Stocks.get_company!(company.id)
     end
 
-    test "create_company/1 with valid data creates a company and a jab is enqueued" do
+    test "create_company/1 with valid data creates a company and a jab is enqueued when category does not exist" do
       valid_attrs =
         %{
           description: description,
@@ -122,6 +122,42 @@ defmodule BambooApp.StocksTest do
           price: price,
           ticker: ticker
         } = params_with_assocs(:company)
+
+      valid_attrs =
+        valid_attrs
+        |> Map.put(:industry, "technology")
+        |> Map.delete(:category_id)
+
+      assert {:ok, %Company{id: company_id, category_id: category_id} = company} =
+               Stocks.create_company(valid_attrs)
+
+      assert company.description == description
+      assert company.name == name
+      assert company.price == price
+      assert company.ticker == ticker
+
+      # job is enqued
+      assert_enqueued(
+        worker: SubscribersWorker,
+        args: %{"company_id" => company_id, "category_id" => category_id}
+      )
+    end
+
+    test "create_company/1 with valid data creates a company and a jab is enqueued when category exists" do
+      insert(:category, name: "technology")
+
+      valid_attrs =
+        %{
+          description: description,
+          name: name,
+          price: price,
+          ticker: ticker
+        } = params_with_assocs(:company)
+
+      valid_attrs =
+        valid_attrs
+        |> Map.put(:industry, "technology")
+        |> Map.delete(:category_id)
 
       assert {:ok, %Company{id: company_id, category_id: category_id} = company} =
                Stocks.create_company(valid_attrs)
@@ -144,7 +180,11 @@ defmodule BambooApp.StocksTest do
 
     test "create_company/1 with duplicate name and ticker fails with error", %{company: company} do
       %{name: name, ticker: ticker} = company
-      params = params_with_assocs(:company, name: name, ticker: ticker)
+
+      params =
+        params_with_assocs(:company, name: name, ticker: ticker)
+        |> Map.delete(:category_id)
+        |> Map.put(:industry, "energy")
 
       assert {:error, %Ecto.Changeset{errors: [ticker: {"has already been taken", _}]}} =
                Stocks.create_company(params)

@@ -37,14 +37,15 @@ defmodule BambooApp.Stocks do
       nil
 
   """
-
   @spec get_category(id :: number()) :: Category.t() | nil
   def get_category(id), do: Repo.get(Category, id)
 
+  @doc """
+   get category by its name return nil if not found
+  """
   @spec get_category_by_name(name :: String.t()) :: Category.t() | nil
   def get_category_by_name(name) do
-    IO.inspect("I get here 3")
-      Repo.get_by(Category, name: name) |> IO.inspect()
+    Repo.get_by(Category, name: String.downcase(name))
   end
 
   @doc """
@@ -59,11 +60,18 @@ defmodule BambooApp.Stocks do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec create_category(attrs :: map()) :: {:ok, Category.t()} | {:error, Ecto.Changeset.t()}
+  @spec create_category(attrs :: map()) :: {:ok, Category.t()} | {:ok, map()}
   def create_category(attrs \\ %{}) do
     %Category{}
     |> Category.changeset(attrs)
     |> Repo.insert()
+    |> case do
+      {:ok, category} ->
+        {:ok, category}
+
+      {:error, _changeset} ->
+        {:ok, %{}}
+    end
   end
 
   @doc """
@@ -120,12 +128,8 @@ defmodule BambooApp.Stocks do
   alias BambooApp.Stocks.Company
 
   @doc """
-  Returns the list of companies.
-  ## Examples
-
-      iex> list_conpanies(params)
-      [%Company{}, ...]
-
+  Returns the list of companies. after searching using a defined criteria,
+  if criteria is not defined use the default criteria fields defined
   """
   @spec list_companies(params :: map()) :: [Company.t()]
   def list_companies(params \\ %{}) do
@@ -179,45 +183,23 @@ defmodule BambooApp.Stocks do
   end
 
   @doc """
-  Creates a company.
-
-  ## Examples
-
-      iex> create_company(%{field: value})
-      {:ok, %Company{}}
-
-      iex> create_company(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
+  Creates a company using provided attributes , if there is an error return {:ok  %{}},
+  this is to avoid callers of this function from crashing
   """
-  @spec create_company(attrs :: map()) :: {:ok, Company.t()} | {:error, Ecto.Changeset.t()}
+  @spec create_company(attrs :: map()) :: {:ok, Company.t()} | {:ok, %{}}
   def create_company(attrs \\ %{}) do
     attrs = Map.put(attrs, :added_at, NaiveDateTime.utc_now())
 
-    %Company{}
-    |> Company.changeset(attrs)
-    |> Repo.insert()
-    |> case do
-      {:ok, company} ->
-        company = company |> Repo.preload(:category)
+    case get_category_by_name(attrs[:industry]) do
+      nil ->
+        {:ok, category} = create_category(%{name: attrs[:industry]})
 
-        %{company_id: company.id, category_id: company.category_id}
-        |> SubscribersWorker.new()
-        |> Oban.insert()
+        transform_data(attrs, category)
+        |> create_company_helper()
 
-        message = Jason.encode!(%{company: company})
-        # broadcast message to all subriber to this category of companies
-        BambooAppWeb.Endpoint.broadcast!(
-          "new_companies:" <> company.category.name,
-          "new_company",
-          message
-        )
-
-        {:ok, company}
-
-      # broadcast to subscribed channels
-      {:error, changeset} ->
-        {:error, changeset}
+      category ->
+        transform_data(attrs, category)
+        |> create_company_helper()
     end
   end
 
@@ -259,6 +241,9 @@ defmodule BambooApp.Stocks do
     Repo.delete(company)
   end
 
+  @doc """
+  check if atleast one company was added to our database in the last 24hours
+  """
   @spec company_added_last_24hours?() :: boolean()
   def company_added_last_24hours? do
     last_24_hours = NaiveDateTime.add(NaiveDateTime.utc_now(), -86_400)
@@ -281,5 +266,38 @@ defmodule BambooApp.Stocks do
   @spec change_company(company :: Company.t(), map()) :: Ecto.Changeset.t()
   def change_company(%Company{} = company, attrs \\ %{}) do
     Company.changeset(company, attrs)
+  end
+
+  defp transform_data(company_attrs, category) do
+    company_attrs
+    |> Map.put(:category_id, category.id)
+    |> Map.delete(:industry)
+  end
+
+  defp create_company_helper(company_attrs) do
+    %Company{}
+    |> Company.changeset(company_attrs)
+    |> Repo.insert()
+    |> case do
+      {:ok, company} ->
+        company = company |> Repo.preload(:category)
+
+        %{company_id: company.id, category_id: company.category_id}
+        |> SubscribersWorker.new()
+        |> Oban.insert()
+
+        message = Jason.encode!(%{company: company})
+        # broadcast message to all subriber to this category of companies
+        BambooAppWeb.Endpoint.broadcast!(
+          "new_companies:" <> company.category.name,
+          "new_company",
+          message
+        )
+
+        {:ok, company}
+
+      {:error, _changeset} ->
+        {:ok, %{}}
+    end
   end
 end

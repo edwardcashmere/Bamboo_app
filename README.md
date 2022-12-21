@@ -1,10 +1,10 @@
 # BambooApp
 
-## Setup The App Correctly
+## Setup The BambooApp Correctly
  * run `mix deps.get`
  * run `mix compile`
- * run `mix ecto.setup`
  * run `mix docker-compose up -d` (setup database and rabbitmq container)
+ * run `mix ecto.setup`
  * go to localhost:15672 
  * enter email: **user**
  * enter password: **password**

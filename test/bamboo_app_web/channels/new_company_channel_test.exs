@@ -13,14 +13,26 @@ defmodule BambooAppWeb.NewCompanyChannelTest do
     %{socket: socket}
   end
 
-  test "company broadcasts to new_companies:technology", %{socket: socket} do
-    category = insert(:category, name: "technology")
-    new_company_params = params_with_assocs(:company, category: category)
+  test "company broadcasts to new_companies:technology", %{socket: _socket} do
+    _category = insert(:category, name: "technology")
+
+    new_company_params =
+      params_with_assocs(:company, name: "amazon", description: "None")
+      |> Map.put(:industry, "technology")
+      |> Map.delete(:category_id)
+      |> atom_keys_to_string_keys()
 
     {:ok, %BambooApp.Stocks.Company{id: _id}} = Stocks.create_company(new_company_params)
 
     assert_broadcast "new_company",
-                     "{\"company\":{\"name\":\"company0\",\"description\":\"The best in the world0\",\"price\":10.0,\"ticker\":\"MSFT\"," <>
+                     "{\"company\":{\"name\":\"amazon\",\"description\":\"None\",\"price\":10.0,\"ticker\":\"AMZN\"," <>
                        _other
+  end
+
+  defp atom_keys_to_string_keys(map) do
+    Enum.map(map, fn
+      {key, value} -> {to_string(key), value}
+    end)
+    |> Enum.into(%{})
   end
 end

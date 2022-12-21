@@ -39,7 +39,6 @@ defmodule BambooApp.DataCase do
   """
   def setup_sandbox(tags) do
     pid = Ecto.Adapters.SQL.Sandbox.start_owner!(BambooApp.Repo, shared: not tags[:async])
-    # start_supervised(BambooApp.Monitor)
     on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
   end
 

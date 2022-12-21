@@ -188,11 +188,11 @@ defmodule BambooApp.Stocks do
   """
   @spec create_company(attrs :: map()) :: {:ok, Company.t()} | {:ok, %{}}
   def create_company(attrs \\ %{}) do
-    attrs = Map.put(attrs, :added_at, NaiveDateTime.utc_now())
+    attrs = Map.put(attrs, "added_at", NaiveDateTime.utc_now())
 
-    case get_category_by_name(attrs[:industry]) do
+    case get_category_by_name(attrs["industry"]) do
       nil ->
-        {:ok, category} = create_category(%{name: attrs[:industry]})
+        {:ok, category} = create_category(%{name: attrs["industry"]})
 
         transform_data(attrs, category)
         |> create_company_helper()
@@ -270,8 +270,8 @@ defmodule BambooApp.Stocks do
 
   defp transform_data(company_attrs, category) do
     company_attrs
-    |> Map.put(:category_id, category.id)
-    |> Map.delete(:industry)
+    |> Map.put("category_id", category.id)
+    |> Map.delete("industry")
   end
 
   defp create_company_helper(company_attrs) do
@@ -296,8 +296,9 @@ defmodule BambooApp.Stocks do
 
         {:ok, company}
 
-      {:error, _changeset} ->
-        {:ok, %{}}
+      {:error, changeset} ->
+        # Logger.info("duplicate ")
+        {:error, changeset}
     end
   end
 end

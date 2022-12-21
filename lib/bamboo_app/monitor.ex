@@ -15,7 +15,7 @@ defmodule BambooApp.Monitor do
   alias BambooApp.Consumer
   alias BambooApp.Stocks
 
-  @timeout 60_000
+  @timeout 1000
 
   def start_link(_) do
     GenServer.start(__MODULE__, :ok, name: __MODULE__)
@@ -39,7 +39,9 @@ defmodule BambooApp.Monitor do
       call_api()
       |> Enum.chunk_every(2)
       |> Enum.each(fn companies ->
-        Enum.map(companies, fn company -> Task.async(fn -> Stocks.create_company(company) end) end)
+        Enum.map(companies, fn company ->
+          Task.async(fn -> company |> atom_keys_to_string_keys() |> Stocks.create_company() end)
+        end)
         |> Task.await_many()
 
         schedule_next_ping()
@@ -135,5 +137,12 @@ defmodule BambooApp.Monitor do
         ]
       }
     ]
+  end
+
+  defp atom_keys_to_string_keys(map) do
+    Enum.map(map, fn
+      {key, value} -> {to_string(key), value}
+    end)
+    |> Enum.into(%{})
   end
 end

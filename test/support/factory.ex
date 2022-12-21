@@ -12,7 +12,7 @@ defmodule BambooApp.Factory do
 
   def category_factory do
     %BambooApp.Stocks.Category{
-      name: sequence(:name, ["technology", "finance", "utility", "manufacturing", "energy"])
+      name: sequence("category")
     }
   end
 

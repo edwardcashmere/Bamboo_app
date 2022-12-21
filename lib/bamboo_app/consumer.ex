@@ -34,14 +34,14 @@ defmodule BambooApp.Consumer do
 
   @impl true
   def handle_message(_, message, _) do
-    message
-    |> Message.update_data(&process_data/1)
+    message |> Message.update_data(&process_data/1)
   end
 
   defp process_data(message) do
-    Logger.info("I was received #{message}")
+    Logger.info("message I was received  #{inspect(message)}")
 
     message
+    |> Jason.decode!()
     |> Stocks.create_company()
   end
 end

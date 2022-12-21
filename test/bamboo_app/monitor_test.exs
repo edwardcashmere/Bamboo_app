@@ -1,6 +1,6 @@
 defmodule BambooApp.MonitorTest do
   @moduledoc false
-  use BambooApp.DataCase, async: true
+  use BambooApp.DataCase
 
   alias BambooApp.Monitor
 

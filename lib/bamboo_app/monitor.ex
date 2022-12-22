@@ -15,7 +15,7 @@ defmodule BambooApp.Monitor do
   alias BambooApp.Consumer
   alias BambooApp.Stocks
 
-  @timeout 20_000
+  @timeout 1000
   @process_chunk 2
 
   def start_link(_) do
@@ -34,7 +34,7 @@ defmodule BambooApp.Monitor do
   def handle_info(:ping, %{page: page} = state) do
     consumer_pid = :erlang.whereis(Consumer)
 
-    if Process.alive?(consumer_pid) and Stocks.company_added_last_24hours?() do
+    if false and Stocks.company_added_last_24hours?() do
       schedule_next_ping()
 
       {:noreply, state}
@@ -66,9 +66,8 @@ defmodule BambooApp.Monitor do
     {:noreply, state}
   end
 
-  def handle_info(:next_page, %{page: page, total: _total} = state) do
-    %{total: total, page_number: page_number, page_size: page_size, data: data} =
-      fetch_companies(page)
+  def handle_info(:next_page, %{page: page, total: total} = state) do
+    %{page_number: page_number, page_size: page_size, data: data} = fetch_companies(page)
 
     :ok = process_data(data)
 

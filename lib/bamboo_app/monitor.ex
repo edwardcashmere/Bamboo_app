@@ -15,7 +15,8 @@ defmodule BambooApp.Monitor do
   alias BambooApp.Consumer
   alias BambooApp.Stocks
 
-  @timeout 1000
+  @timeout 20_000
+  @process_chunk 2
 
   def start_link(_) do
     GenServer.start(__MODULE__, :ok, name: __MODULE__)
@@ -26,51 +27,78 @@ defmodule BambooApp.Monitor do
     send(self(), :ping)
 
     Logger.info("Monitor was started successfully")
-    {:ok, %{}}
+    {:ok, %{page: 1, total: nil}}
   end
 
   @impl true
-  def handle_info(:ping, socket) do
+  def handle_info(:ping, %{page: page} = state) do
     consumer_pid = :erlang.whereis(Consumer)
 
     if Process.alive?(consumer_pid) and Stocks.company_added_last_24hours?() do
       schedule_next_ping()
+
+      {:noreply, state}
     else
-      call_api()
-      |> Enum.chunk_every(2)
-      |> Enum.each(fn companies ->
-        Enum.map(companies, fn company ->
-          Task.async(fn -> company |> atom_keys_to_string_keys() |> Stocks.create_company() end)
-        end)
-        |> Task.await_many()
+      %{total: total, page_number: page_number, page_size: page_size, data: data} =
+        fetch_companies(page)
 
-        schedule_next_ping()
-      end)
+      :ok = process_data(data)
+
+      state =
+        state
+        |> Map.put(:page, page_number + 1)
+        |> Map.put(:total, total - page_size)
+
+      send(self(), :next_page)
+
+      {:noreply, state}
     end
+  end
 
-    {:noreply, socket}
+  def handle_info(:next_page, %{page: _page, total: 0} = state) do
+    schedule_next_ping()
+
+    state =
+      state
+      |> Map.put(:page, 1)
+      |> Map.put(:total, nil)
+
+    {:noreply, state}
+  end
+
+  def handle_info(:next_page, %{page: page, total: _total} = state) do
+    %{total: total, page_number: page_number, page_size: page_size, data: data} =
+      fetch_companies(page)
+
+    :ok = process_data(data)
+
+    state =
+      state
+      |> Map.put(:page, page_number + 1)
+      |> Map.put(:total, total - page_size)
+
+    send(self(), :next_page)
+
+    {:noreply, state}
   end
 
   # NB:improvement process the data from the rest api per page before fetching the next page until done
   # we want to avoid loading the entire data of new companies into our memory
 
-  def call_api(_, 0) do
-    []
+  @spec process_data(list()) :: :ok
+  defp process_data(data) do
+    data
+    |> Enum.chunk_every(@process_chunk)
+    |> Enum.each(fn companies ->
+      Enum.map(companies, fn company ->
+        # credo:disable-for-next-line
+        Task.async(fn -> company |> atom_keys_to_string_keys() |> Stocks.create_company() end)
+      end)
+      |> Task.await_many()
+    end)
   end
 
-  def call_api(page, total) do
-    %{page_size: page_size, page_number: page_number, data: data} = fetch_companies(page)
-    data ++ call_api(page_number + 1, total - page_size)
-  end
-
-  def call_api(page \\ 1) do
-    %{total: total, page_size: page_size, page_number: page_number, data: data} =
-      fetch_companies(page)
-
-    data ++ call_api(page_number + 1, total - page_size)
-  end
-
-  defp fetch_companies(page) do
+  def fetch_companies(page) do
     Enum.find(data(), fn %{page_number: page_number} -> page_number == page end)
   end
 

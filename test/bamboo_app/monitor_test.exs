@@ -11,7 +11,7 @@ defmodule BambooApp.MonitorTest do
     end
 
     test "when invoked call_api, get all the data from all the pages" do
-      assert Monitor.call_api() |> length == 6
+      assert Monitor.fetch_companies(1).data |> length() == 3
     end
   end
 end

@@ -15,34 +15,33 @@ defmodule BambooApp.Monitor do
   alias BambooApp.Consumer
   alias BambooApp.Stocks
 
-  @timeout 1000
   @process_chunk 2
 
   def start_link(_) do
-    GenServer.start(__MODULE__, :ok, name: __MODULE__)
+    GenServer.start(__MODULE__, [timeout: 60_000, process_chunk: 2], name: __MODULE__)
   end
 
   @impl true
-  def init(:ok) do
+  def init(timeout: timeout, process_chunk: process_chunk) do
     send(self(), :ping)
 
     Logger.info("Monitor was started successfully")
-    {:ok, %{page: 1, total: nil}}
+    {:ok, %{page: 1, total: nil, timeout: timeout, process_chunk: process_chunk}}
   end
 
   @impl true
-  def handle_info(:ping, %{page: page} = state) do
+  def handle_info(:ping, %{page: page, timeout: timeout, process_chunk: process_chunk} = state) do
     consumer_pid = :erlang.whereis(Consumer)
 
-    if false and Stocks.company_added_last_24hours?() do
-      schedule_next_ping()
+    if is_pid(consumer_pid) && Stocks.company_added_last_24hours?() do
+      schedule_next_ping(timeout)
 
       {:noreply, state}
     else
       %{total: total, page_number: page_number, page_size: page_size, data: data} =
         fetch_companies(page)
 
-      :ok = process_data(data)
+      :ok = process_data(data, process_chunk)
 
       state =
         state
@@ -55,8 +54,8 @@ defmodule BambooApp.Monitor do
     end
   end
 
-  def handle_info(:next_page, %{page: _page, total: 0} = state) do
-    schedule_next_ping()
+  def handle_info(:next_page, %{page: _page, total: 0, timeout: timeout} = state) do
+    schedule_next_ping(timeout)
 
     state =
       state
@@ -66,10 +65,10 @@ defmodule BambooApp.Monitor do
     {:noreply, state}
   end
 
-  def handle_info(:next_page, %{page: page, total: total} = state) do
+  def handle_info(:next_page, %{page: page, total: total, process_chunk: process_chunk} = state) do
     %{page_number: page_number, page_size: page_size, data: data} = fetch_companies(page)
 
-    :ok = process_data(data)
+    :ok = process_data(data, process_chunk)
 
     state =
       state
@@ -84,10 +83,10 @@ defmodule BambooApp.Monitor do
   # NB:improvement process the data from the rest api per page before fetching the next page until done
   # we want to avoid loading the entire data of new companies into our memory
 
-  @spec process_data(list()) :: :ok
-  defp process_data(data) do
+  @spec process_data(list(), number()) :: :ok
+  defp process_data(data, process_chunk) do
     data
-    |> Enum.chunk_every(@process_chunk)
+    |> Enum.chunk_every(process_chunk)
     |> Enum.each(fn companies ->
       Enum.map(companies, fn company ->
         # credo:disable-for-next-line
@@ -101,8 +100,8 @@ defmodule BambooApp.Monitor do
     Enum.find(data(), fn %{page_number: page_number} -> page_number == page end)
   end
 
-  defp schedule_next_ping() do
-    Process.send_after(self(), :ping, @timeout)
+  defp schedule_next_ping(timeout) do
+    Process.send_after(self(), :ping, timeout)
   end
 
   def data() do
